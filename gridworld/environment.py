@@ -35,12 +35,13 @@ class State(object):
 
 
 class Environment(object):
-    def __init__(self, seed, obs_form=SPATIAL):
+    def __init__(self, seed, obs_form=SPATIAL, easy_mode=False):
 
         self.max_dim = HEIGHT - 1  # square assumption
         self.norm_factor = 2 / self.max_dim   # self.norm_factor = 2 / self.max_dim
 
         self.obs_form = SPATIAL
+        self.easy_mode = easy_mode
 
         self.agent_color = np.asarray([255, 255, 255])
         self.goal_color = np.asarray([153, 255, 153])
@@ -69,8 +70,6 @@ class Environment(object):
             self.goal_pos.append(goal_pos)
             self.pit_positions.append(np.where(grid == 1))
             self.passage_positions.append(np.where(grid == 0))
-
-
 
         if self.obs_form == NONSPATIAL:
             self.obs_shape = (32,)
@@ -234,7 +233,7 @@ class Environment(object):
         self.state.stage = 0
         self.state.done = False
         self.state.timeout = False
-        self.state.agent_pos = list(self.agent_pos)
+        self.state.agent_pos = list(self.agent_pos[0])
         self.state.goal_pos = list(self.goal_pos[0])
         return self.state_to_obs(self.state)
 
@@ -268,9 +267,11 @@ class Environment(object):
                 state.agent_pos[0] = agent_pos_prev[0]
                 state.agent_pos[1] = agent_pos_prev[1]
             else:
-                #state.agent_pos[0] = agent_pos_prev[0]
-                #state.agent_pos[1] = agent_pos_prev[1]
-                state.done = True
+                if self.easy_mode:
+                    state.agent_pos[0] = agent_pos_prev[0]
+                    state.agent_pos[1] = agent_pos_prev[1]
+                else:
+                    state.done = True
 
         elif state.agent_pos[0] == state.goal_pos[0] and state.agent_pos[1] == state.goal_pos[1]:
             reward = 1.0
