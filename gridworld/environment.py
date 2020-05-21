@@ -35,12 +35,12 @@ class State(object):
 
 
 class Environment(object):
-    def __init__(self, seed, obs_form):
+    def __init__(self, seed, obs_form=SPATIAL):
 
         self.max_dim = HEIGHT - 1  # square assumption
         self.norm_factor = 2 / self.max_dim   # self.norm_factor = 2 / self.max_dim
 
-        self.obs_form = obs_form
+        self.obs_form = SPATIAL
 
         self.agent_color = np.asarray([255, 255, 255])
         self.goal_color = np.asarray([153, 255, 153])
@@ -69,6 +69,8 @@ class Environment(object):
             self.goal_pos.append(goal_pos)
             self.pit_positions.append(np.where(grid == 1))
             self.passage_positions.append(np.where(grid == 0))
+
+
 
         if self.obs_form == NONSPATIAL:
             self.obs_shape = (32,)
