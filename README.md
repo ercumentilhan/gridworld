@@ -1,4 +1,4 @@
-# IceWorld
+# GridWorld
 
 ## Installation
 **Dependencies**
