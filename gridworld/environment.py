@@ -118,7 +118,7 @@ class Environment(object):
             base_obs = np.zeros((2*(2 + n_pits)), dtype=np.float32)
             for n in range(len(pit_positions[0])):
                 base_obs[4 + 2*n], base_obs[4 + 2*n + 1] = pit_positions[0][n], pit_positions[1][n]
-            base_obs[0], base_obs[1] = self.agent_pos[0], self.agent_pos[1]
+            base_obs[0], base_obs[1] = self.agent_pos[s][0], self.agent_pos[s][1]
             base_obs[2], base_obs[3] = self.goal_pos[s][0], self.goal_pos[s][1]
             base_obs *= self.norm_factor
             base_obs -= 1
