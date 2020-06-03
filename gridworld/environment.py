@@ -11,6 +11,7 @@ SPATIAL = 1
 HEIGHT = 9
 WIDTH = 9
 N_STAGES = 1  # some levels may have multiple stages - only 1 stage for now
+EASY_MODE = False
 
 LEVEL = np.array([
         [2, 0, 0, 0, 1, 0, 0, 0, 3],
@@ -35,13 +36,15 @@ class State(object):
 
 
 class Environment(object):
-    def __init__(self, seed, obs_form=SPATIAL, easy_mode=False):
+    def __init__(self, seed, slipping_prob):
 
         self.max_dim = HEIGHT - 1  # square assumption
         self.norm_factor = 2 / self.max_dim   # self.norm_factor = 2 / self.max_dim
 
         self.obs_form = SPATIAL
-        self.easy_mode = easy_mode
+        self.easy_mode = EASY_MODE
+
+        self.slipping_prob = slipping_prob
 
         self.agent_color = np.asarray([255, 255, 255])
         self.goal_color = np.asarray([153, 255, 153])
@@ -241,7 +244,7 @@ class Environment(object):
 
     def transitive(self, state, action):
 
-        slipped = self.random.random_sample() < 0.1
+        slipped = self.random.random_sample() < self.slipping_prob
         agent_pos_prev = (state.agent_pos[0], state.agent_pos[1])
 
         if slipped:
