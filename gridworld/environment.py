@@ -31,6 +31,8 @@ class State(object):
         self.stage = 0
         self.done = None
         self.timeout = None
+        self.agent_dead = False
+        self.agent_pos_prev = [0, 0]
         self.agent_pos = [0, 0]
         self.goal_pos = [0, 0]
 
@@ -95,7 +97,7 @@ class Environment(object):
                 if not (self.passage_positions[s][0][n] == self.goal_pos[s][0] and
                         self.passage_positions[s][1][n] == self.goal_pos[s][1]):
                     self.state_id_dict[(s, self.passage_positions[s][0][n], self.passage_positions[s][1][n])] = state_id
-                    self.agent_pos_dict[state_id] = (self.passage_positions[s][0][n], self.passage_positions[s][1][n])
+                    self.agent_pos_dict[state_id] = (s, self.passage_positions[s][0][n], self.passage_positions[s][1][n])
                     for i_action in range(4):
                         self.transition_id_dict[
                             (s, self.passage_positions[s][0][n], self.passage_positions[s][1][n], i_action)] = \
@@ -177,7 +179,6 @@ class Environment(object):
             self.optimal_actions.append(optimal_actions)
             self.dist_to_goal.append(dist_to_goal)
 
-
         self.action_quality = []
 
         self.action_quality_by_state_id = np.full((self.n_states, 4), 0, dtype=np.int)
@@ -236,6 +237,8 @@ class Environment(object):
         self.state.stage = 0
         self.state.done = False
         self.state.timeout = False
+        self.state.agent_dead = False
+        self.state.agent_pos_prev = list(self.agent_pos[0])
         self.state.agent_pos = list(self.agent_pos[0])
         self.state.goal_pos = list(self.goal_pos[0])
         return self.state_to_obs(self.state)
@@ -245,7 +248,7 @@ class Environment(object):
     def transitive(self, state, action):
 
         slipped = self.random.random_sample() < self.slipping_prob
-        agent_pos_prev = (state.agent_pos[0], state.agent_pos[1])
+        state.agent_pos_prev[0], state.agent_pos_prev[1] = state.agent_pos[0], state.agent_pos[1]
 
         if slipped:
             p = [1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 3.0]
@@ -267,13 +270,14 @@ class Environment(object):
                 state.agent_pos[1] < 0 or state.agent_pos[1] >= WIDTH or \
                 self.grid[state.stage][state.agent_pos[0], state.agent_pos[1]] == 1:
             if slipped:
-                state.agent_pos[0] = agent_pos_prev[0]
-                state.agent_pos[1] = agent_pos_prev[1]
+                state.agent_pos[0] = state.agent_pos_prev[0]
+                state.agent_pos[1] = state.agent_pos_prev[1]
             else:
                 if self.easy_mode:
-                    state.agent_pos[0] = agent_pos_prev[0]
-                    state.agent_pos[1] = agent_pos_prev[1]
+                    state.agent_pos[0] = state.agent_pos_prev[0]
+                    state.agent_pos[1] = state.agent_pos_prev[1]
                 else:
+                    state.agent_dead = True
                     state.done = True
 
         elif state.agent_pos[0] == state.goal_pos[0] and state.agent_pos[1] == state.goal_pos[1]:
@@ -318,6 +322,12 @@ class Environment(object):
 
     # ------------------------------------------------------------------------------------------------------------------
 
+    def generate_obs_from_state(self, state_id):
+        stage, agent_pos_x, agent_pos_y = self.agent_pos_dict[state_id]
+        return self.generate_obs(stage, (agent_pos_x, agent_pos_y))
+
+    # ------------------------------------------------------------------------------------------------------------------
+
     def optimal_action(self, state_in=None):
         state = self.state if state_in is None else state_in
         return self.optimal_actions[state.stage][state.agent_pos[0]][state.agent_pos[1]]
@@ -356,6 +366,17 @@ class Environment(object):
     def get_transition_id(self, action, state_in=None):
         state = self.state if state_in is None else state_in
         return self.transition_id_dict[(state.stage, state.agent_pos[0], state.agent_pos[1], action)]
+
+    # ------------------------------------------------------------------------------------------------------------------
+
+    def get_state_dist_to_goal(self, state_in=None):
+        state = self.state if state_in is None else state_in
+        return self.dist_to_goal[state.stage][state.agent_pos[0], state.agent_pos[1]]
+
+    # ------------------------------------------------------------------------------------------------------------------
+
+    def get_pos_dist_to_goal(self, stage, pos_y, pos_x):
+        return self.dist_to_goal[stage][pos_y, pos_x]
 
     # ------------------------------------------------------------------------------------------------------------------
 
