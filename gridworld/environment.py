@@ -92,16 +92,19 @@ class Environment(object):
             agent_ind = np.where(grid == 2)
             agent_pos = [agent_ind[0][0], agent_ind[1][0]]
             grid[agent_pos[0], agent_pos[1]] = 0
+            self.agent_pos.append(agent_pos)
 
             goal_ind = np.where(grid == 3)
             goal_pos = [goal_ind[0][0], goal_ind[1][0]]
-            grid[goal_pos[0], goal_pos[1]] = 0
-
-            self.grid.append(grid)
-            self.agent_pos.append(agent_pos)
             self.goal_pos.append(goal_pos)
+
             self.pit_positions.append(np.where(grid == 1))
             self.passage_positions.append(np.where(grid == 0))
+
+            grid[goal_pos[0], goal_pos[1]] = 0
+            self.grid.append(grid)
+
+        print(self.passage_positions[0], len(self.passage_positions[0][0]))
 
         self.n_pits = len(self.pit_positions[0][0])
         self.n_passages = len(self.passage_positions[0][0])
