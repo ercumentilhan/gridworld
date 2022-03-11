@@ -424,7 +424,10 @@ class Environment(object):
 
     def get_state_id(self, state_in=None):
         state = self.state if state_in is None else state_in
-        return self.state_id_dict[(state.stage, state.agent_pos[0], state.agent_pos[1])]
+        if state.done:
+            return None
+        else:
+            return self.state_id_dict[(state.stage, state.agent_pos[0], state.agent_pos[1])]
 
     # ==================================================================================================================
 
